@@ -1,0 +1,16 @@
+DELETE  http://localhost/api/recipes/4/
+Content-Type: application/json
+
+# {
+#     "author": "1",
+#     "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAgMAAABieywaAAAACVBMVEUAAAD///9fX1/S0ecCAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNoAAAAggCByxOyYQAAAABJRU5ErkJggg==",
+#     "name": "string",
+#     "text": "string",
+#     "cooking_time": 1,
+#     "ingredients": [
+#         1
+#     ],
+#     "tags": [
+#         1
+#     ]
+# }
