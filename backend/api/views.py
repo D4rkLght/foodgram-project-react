@@ -1,5 +1,6 @@
 import os
 
+from django.db.models import Sum
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
@@ -132,8 +133,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def download_shopping_cart(self, request):
-        
-        return ...
+        filename = 'list_ingredients.pdf'
+        instance = request.user.cart.all()
+        ingredients = IngredientAmount.objects.filter(
+            recipe__in=instance.values('recipe')
+        ).values('ingredient').annotate(amount=Sum('amount'))
+        list_ingredients = []
+        for ingredient in ingredients:
+            amount = ingredient['amount']
+            ingredient = Ingredient.objects.get(id=ingredient['ingredient'])
+            measurement_unit = ingredient.measurement_unit
+            list_ingredients.append(
+                f'{ingredient} ({amount}) — {measurement_unit}'
+            )
+        response = Response(list_ingredients, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename={filename}'
+        return response
 
     @action(
         detail=True,
@@ -146,11 +161,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == 'POST':
             serializer = CartSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
-                serializer.save(user=user, recipe=recipe)
+                serializer.save(author=user, recipe=recipe)
                 return Response(serializer.data, status=HTTPStatus.CREATED)
             return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
-        if Cart.objects.filter(user=user, recipe=recipe).exists():
-            Cart.objects.get(user=user).delete()
+        if Cart.objects.filter(author=user, recipe=recipe).exists():
+            Cart.objects.get(author=user).delete()
             return Response(status=HTTPStatus.NO_CONTENT)
         return Response(status=HTTPStatus.NOT_FOUND)
 

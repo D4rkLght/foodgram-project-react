@@ -127,7 +127,7 @@ class Cart(models.Model):
         related_name='in_cart',
         on_delete=models.CASCADE,
     )
-    user = models.ForeignKey(
+    author = models.ForeignKey(
         User,
         related_name='cart',
         on_delete=models.CASCADE,
