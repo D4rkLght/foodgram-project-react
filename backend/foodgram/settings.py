@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,9 +12,6 @@ SECRET_KEY = 'django-insecure-44@s4f##@9=hadk)^vh0p819*2nw8-x-goj=#%td6m4$hhumgt
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
-
-
 
 DEFAULT_APPS = [
     'django.contrib.admin',

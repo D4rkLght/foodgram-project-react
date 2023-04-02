@@ -1,19 +1,25 @@
-from django.db.models import Sum
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
+from django.db.models import Sum
+from django.shortcuts import get_object_or_404
 from djoser.serializers import SetPasswordSerializer
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
-from recipes.models import Tag, Ingredient, Recipe, Favorite, Cart, Subscribe, IngredientAmount
+
+from recipes.models import (Cart, Favorite, Ingredient, IngredientAmount,
+                            Recipe, Subscribe, Tag)
 
 from .filters import RecipeFilter
 from .mixins import ListViewSet
-from .serializers import TagSerializer, IngredientSerializer, RecipeReadOnlySerializer, RecipeWriteSerializer, FavoriteSerializer, CartSerializer, UserSerializer, SubscribeSerializer
 from .paginations import Paginator
-from .permissions import IsUserAdminOrReadOnly, IsOwnerAdminOrReadOnly, IsAdminOrReadOnly
+from .permissions import (IsAdminOrReadOnly, IsOwnerAdminOrReadOnly,
+                          IsUserAdminOrReadOnly)
+from .serializers import (CartSerializer, FavoriteSerializer,
+                          IngredientSerializer, RecipeReadOnlySerializer,
+                          RecipeWriteSerializer, SubscribeSerializer,
+                          TagSerializer, UserSerializer)
 
 User = get_user_model()
 
@@ -48,7 +54,7 @@ class UserViewSet(viewsets.ModelViewSet):
             self.request.user.save()
             return Response(status=HTTPStatus.NO_CONTENT)
         return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
-    
+
     @action(
         detail=False,
         methods=['get'],
@@ -62,7 +68,7 @@ class UserViewSet(viewsets.ModelViewSet):
             context={'request': request}
         )
         return Response(serializer.data)
-    
+
     @action(
         detail=True,
         methods=['post', 'delete'],
@@ -117,7 +123,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             Favorite.objects.get(user=user).delete()
             return Response(status=HTTPStatus.NO_CONTENT)
         return Response(status=HTTPStatus.NOT_FOUND)
-    
+
     @action(
         detail=False,
         methods=['get'],

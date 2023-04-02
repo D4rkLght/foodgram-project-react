@@ -1,6 +1,6 @@
-from django.db import models
-from django.core.validators import MinValueValidator
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
+from django.db import models
 
 User = get_user_model()
 
@@ -26,7 +26,7 @@ class Tag(models.Model):
         verbose_name = 'Tag'
         verbose_name_plural = 'Tags'
         ordering = ('name',)
-    
+
     def __str__(self) -> str:
         return self.name
 
@@ -46,7 +46,7 @@ class Ingredient(models.Model):
         verbose_name = 'Ingredient'
         verbose_name_plural = 'Ingredients'
         ordering = ('name', )
-    
+
     def __str__(self) -> str:
         return self.name
 
@@ -64,7 +64,7 @@ class Recipe(models.Model):
         verbose_name='Tags'
     )
     author = models.ForeignKey(
-        User, 
+        User,
         on_delete=models.CASCADE,
         verbose_name='Author',
     )
@@ -127,7 +127,7 @@ class IngredientAmount(models.Model):
 
     def __str__(self):
         return f'{self.ingredient} ({self.amount})'
- 
+
 
 class Favorite(models.Model):
     recipe = models.ForeignKey(
@@ -146,6 +146,7 @@ class Favorite(models.Model):
         verbose_name='Publication date',
         auto_now_add=True,
     )
+
     class Meta:
         verbose_name = 'Favorite recipe'
         verbose_name_plural = 'Favorite recipes'
@@ -168,6 +169,7 @@ class Cart(models.Model):
         verbose_name='Publication date',
         auto_now_add=True,
     )
+
     class Meta:
         verbose_name = 'Shopping cart'
         verbose_name_plural = 'Shopping carts'
