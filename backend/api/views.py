@@ -1,5 +1,3 @@
-import os
-
 from django.db.models import Sum
 from http import HTTPStatus
 
@@ -11,9 +9,11 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from recipes.models import Tag, Ingredient, Recipe, Favorite, Cart, Subscribe, IngredientAmount
 
+from .filters import RecipeFilter
+from .mixins import ListViewSet
 from .serializers import TagSerializer, IngredientSerializer, RecipeReadOnlySerializer, RecipeWriteSerializer, FavoriteSerializer, CartSerializer, UserSerializer, SubscribeSerializer
 from .paginations import Paginator
-from .permissions import IsUserAdminOrReadOnly, IsOwnerAdminOrReadOnly
+from .permissions import IsUserAdminOrReadOnly, IsOwnerAdminOrReadOnly, IsAdminOrReadOnly
 
 User = get_user_model()
 
@@ -85,20 +85,11 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(status=HTTPStatus.NOT_FOUND)
 
 
-class TagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
-
-
-class IngredientViewSet(viewsets.ModelViewSet):
-    queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer
-
-
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     pagination_class = Paginator
     permission_classes = (IsOwnerAdminOrReadOnly,)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.action in ('retrieve', 'list'):
@@ -170,11 +161,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(status=HTTPStatus.NOT_FOUND)
 
 
-class FavoriteViewSet(viewsets.ModelViewSet):
-    queryset = Favorite.objects.all()
-    serializer_class = FavoriteSerializer
+class TagViewSet(ListViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = (IsAdminOrReadOnly,)
 
 
-class CartViewSet(viewsets.ModelViewSet):
-    queryset = Cart.objects.all()
-    serializer_class = CartSerializer
+class IngredientViewSet(ListViewSet):
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+    permission_classes = (IsAdminOrReadOnly,)
