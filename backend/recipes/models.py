@@ -33,7 +33,7 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     name = models.CharField(
-        max_length=50,
+        max_length=100,
         verbose_name='Ingredient',
         db_index=True,
     )
@@ -74,11 +74,15 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         max_length=50,
-        db_index=True,
         verbose_name='Recipe name',
     )
     text = models.TextField(verbose_name='Description')
-    cooking_time = models.IntegerField(verbose_name='Cooking time')
+    cooking_time = models.IntegerField(
+        validators=[
+            MinValueValidator(1, 'Minimal cooking time')
+        ],
+        verbose_name='Cooking time'
+    )
     pub_date = models.DateTimeField(
         verbose_name='Publication date',
         auto_now_add=True,
@@ -151,8 +155,11 @@ class Favorite(models.Model):
         verbose_name = 'Favorite recipe'
         verbose_name_plural = 'Favorite recipes'
 
+    def __str__(self):
+        return self.recipe
 
-class Cart(models.Model):
+
+class ShoppingCart(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         related_name='in_cart',
@@ -200,3 +207,6 @@ class Subscribe(models.Model):
                 fields=['user', 'author'],
                 name='unique_subscription'),
         ]
+
+    def __str__(self):
+        return f'User {self.user} subccribed to {self.author}'

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent.parent.parent.joinpath('infra/.env'))
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,7 +20,6 @@ DEFAULT_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_filters',
 ]
 
 LOCAL_APPS = [
@@ -32,7 +31,8 @@ LOCAL_APPS = [
 EXTERNAL_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
-    'djoser'
+    'djoser',
+    'django_filters',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + LOCAL_APPS + EXTERNAL_APPS
@@ -52,12 +52,14 @@ ROOT_URLCONF = 'foodgram.urls'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
+    'DEFAULT_PAGINATION_CLASS':
+        'api.paginations.Paginator',
+    'PAGE_SIZE': 6,
 }
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
-    'HIDE_USERS': False,
 }
 
 TEMPLATES = [
@@ -81,11 +83,11 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
-        'NAME': os.getenv('DB_NAME', default='postgres'),
-        'USER': os.getenv('POSTGRES_USER', default='postgres'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),
-        'HOST': os.getenv('DB_HOST', default='localhost'),
-        'PORT': os.getenv('DB_PORT', default='5432')
+        'NAME': os.getenv('DB_NAME', default='None'),
+        'USER': os.getenv('POSTGRES_USER', default='None'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='None'),
+        'HOST': os.getenv('DB_HOST', default='None'),
+        'PORT': os.getenv('DB_PORT', default='None')
     }
 }
 

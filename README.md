@@ -1,4 +1,4 @@
-![yamdb_workflow](https://github.com/D4rkLght/foodgram-project-react/actions/workflows/yamdb_workflow.yml/badge.svg)
+![foodgram_workflow](https://github.com/D4rkLght/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
 ### Стек технологий
 [![Python](https://img.shields.io/badge/-Python-464641?style=flat-square&logo=Python)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-464646?style=flat-square&logo=django)](https://www.djangoproject.com/)
@@ -44,6 +44,6 @@ docker-compose exec web python manage.py createsuperuser
 docker-compose exec web python manage.py dumpdata > fixtures.json 
 ```
 # Примеры запросов:
-http://localhost/redoc/ http://lockalhost/admin/
-## Над проектом работали:
-1. Разработчик [Ярослав Андреев ](https://github.com/D4rkLght).
+http://localhost/redoc/ http://localhost/admin/
+## Над проектом работал:
+Разработчик [Ярослав Андреев ](https://github.com/D4rkLght).

@@ -1,10 +1,13 @@
+from http import HTTPStatus
+
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from recipes.models import (Cart, Favorite, Ingredient, IngredientAmount,
-                            Recipe, Subscribe, Tag)
+from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
+                            ShoppingCart, Subscribe, Tag)
 
 User = get_user_model()
 
@@ -17,21 +20,20 @@ class UserSerializer(serializers.ModelSerializer):
         )],
         required=True,
     )
+
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
+        model = User
         fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'password', 'is_subscribed')
-        model = User
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {'password': {'write_only': True},
+                        'is_subscribed': {'read_only': True}}
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        if not user.is_anonymous:
-            return Subscribe.objects.filter(
-                user=user,
-                author=obj.author
-            ).exists()
+        if user.is_authenticated:
+            return Subscribe.objects.filter(user=user, author=obj).exists()
         return False
 
     def create(self, validated_data):
@@ -62,28 +64,34 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        if not user.is_anonymous:
+        if user.is_authenticated:
             return Subscribe.objects.filter(
                 user=user,
                 author=obj.author
             ).exists()
         return False
 
+    def validate(self, data):
+        if self.context.get('author') == self.context.get('request').user:
+            raise ValidationError('Cant subscribe myself',
+                                  HTTPStatus.BAD_REQUEST)
+        return data
+
 
 class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
-        fields = '__all__'
-        read_only_fields = '__all__'
+        fields = ('id', 'name', 'color', 'slug')
+        read_only_fields = ('name', 'color', 'slug')
 
 
 class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ingredient
-        fields = '__all__'
-        read_only_fields = '__all__',
+        fields = ('id', 'name', 'measurement_unit')
+        read_only_fields = ('name', 'measurement_unit')
 
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
@@ -100,7 +108,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientAmount
-        fields = '__all__'
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class RecipeReadOnlySerializer(serializers.ModelSerializer):
@@ -115,18 +123,22 @@ class RecipeReadOnlySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = '__all__'
+        fields = (
+            'id', 'tags', 'author', 'ingredients',
+            'is_favorited', 'is_in_shopping_cart',
+            'name', 'image', 'text', 'cooking_time'
+        )
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
-        if not user.is_anonymous:
+        if user.is_authenticated:
             return Favorite.objects.filter(recipe=obj).exists()
         return False
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
-        if not user.is_anonymous:
-            return Cart.objects.filter(recipe=obj).exists()
+        if user.is_authenticated:
+            return ShoppingCart.objects.filter(recipe=obj).exists()
         return False
 
 
@@ -154,7 +166,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = '__all__'
+        fields = ('name', 'text', 'cooking_time', 'author',
+                  'ingredients', 'tags', 'image',)
 
     def to_representation(self, instance):
         ingredients = super().to_representation(instance)
@@ -163,16 +176,15 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return ingredients
 
     def add_ingredients(self, ingredients, model):
-        for ingredient in ingredients:
-            IngredientAmount.objects.update_or_create(
-                recipe=model,
-                ingredient=ingredient['id'],
-                amount=ingredient['amount'])
+        recipe_ingredient = [IngredientAmount(
+            ingredient=part['id'], recipe=model, amount=part['amount']
+        ) for part in ingredients]
+        IngredientAmount.objects.bulk_create(recipe_ingredient)
 
     def update(self, instance, validated_data):
         ingredients = validated_data.pop('ingredients')
         instance.ingredients.clear()
-        self.add_tingredients(ingredients, instance)
+        self.add_ingredients(ingredients, instance)
         return super().update(instance, validated_data)
 
     def create(self, validated_data):
@@ -216,5 +228,5 @@ class CartSerializer(serializers.ModelSerializer):
         read_only=True)
 
     class Meta:
-        model = Cart
+        model = ShoppingCart
         fields = ('id', 'name', 'image', 'coocking_time')
