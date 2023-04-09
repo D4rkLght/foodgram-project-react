@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from drf_extra_fields.fields import Base64ImageField
@@ -12,7 +13,7 @@ from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
 User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
+class CreateUserSerializer(UserCreateSerializer):
     email = serializers.EmailField(
         max_length=254,
         validators=[UniqueValidator(
@@ -21,23 +22,25 @@ class UserSerializer(serializers.ModelSerializer):
         required=True,
     )
 
+    class Meta:
+        model = User
+        fields = ('email', 'id', 'username', 'first_name',
+                  'last_name','password')
+
+
+class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name',
-                  'last_name', 'password', 'is_subscribed')
-        extra_kwargs = {'password': {'write_only': True},
-                        'is_subscribed': {'read_only': True}}
+                  'last_name','is_subscribed')
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
         if user.is_authenticated:
             return Subscribe.objects.filter(user=user, author=obj).exists()
         return False
-
-    def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
