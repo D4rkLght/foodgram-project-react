@@ -25,7 +25,7 @@ class CreateUserSerializer(UserCreateSerializer):
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name',
-                  'last_name','password')
+                  'last_name', 'password')
 
 
 class CustomUserSerializer(UserSerializer):
@@ -34,7 +34,7 @@ class CustomUserSerializer(UserSerializer):
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name',
-                  'last_name','is_subscribed')
+                  'last_name', 'is_subscribed')
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user

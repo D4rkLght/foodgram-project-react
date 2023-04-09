@@ -33,9 +33,10 @@ class UserUsualViewSet(UserViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def me(self, request):
-        serializer = CustomUserSerializer(request.user, context={'request': request})
+        serializer = CustomUserSerializer(request.user,
+                                          context={'request': request})
         return Response(serializer.data)
-    
+
     @action(
         detail=False,
         methods=('get',),
@@ -49,7 +50,7 @@ class UserUsualViewSet(UserViewSet):
             context={'request': request}
         )
         return Response(serializer.data)
-    
+
     @action(
         detail=True,
         methods=('post', 'delete'),
