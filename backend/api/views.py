@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
+from djoser.views import UserViewSet
 from django.shortcuts import get_object_or_404
-from djoser.serializers import SetPasswordSerializer
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -16,46 +16,30 @@ from .permissions import (IsAdminOrReadOnly, IsOwnerAdminOrReadOnly,
 from .serializers import (CartSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeReadOnlySerializer,
                           RecipeWriteSerializer, SubscribeSerializer,
-                          TagSerializer, UserSerializer)
+                          TagSerializer, CustomUserSerializer)
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Subscribe, Tag)
 
 User = get_user_model()
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    pagination_class = Paginator
+class UserUsualViewSet(UserViewSet):
     permission_classes = (IsUserAdminOrReadOnly,)
-    serializer_class = UserSerializer
+    pagination_class = Paginator
 
     @action(
         detail=False,
         methods=('get',),
-        permission_classes=[permissions.IsAuthenticated]
+        permission_classes=(permissions.IsAuthenticated,)
     )
     def me(self, request):
-        serializer = UserSerializer(request.user, context={'request': request})
+        serializer = CustomUserSerializer(request.user, context={'request': request})
         return Response(serializer.data)
-
-    @action(
-        detail=False,
-        methods=('post',),
-        permission_classes=[permissions.IsAuthenticated]
-    )
-    def set_password(self, request, *args, **kwargs):
-        serializer = SetPasswordSerializer(
-            data=request.data,
-            context={'request': request})
-        if serializer.is_valid(raise_exception=True):
-            self.request.user.set_password(serializer.data.get('new_password'))
-            self.request.user.save()
-            return Response(status=HTTPStatus.NO_CONTENT)
-
+    
     @action(
         detail=False,
         methods=('get',),
-        permission_classes=[permissions.IsAuthenticated]
+        permission_classes=(permissions.IsAuthenticated,)
     )
     def subscriptions(self, request):
         subscriptions = Subscribe.objects.filter(user=self.request.user)
@@ -65,14 +49,14 @@ class UserViewSet(viewsets.ModelViewSet):
             context={'request': request}
         )
         return Response(serializer.data)
-
+    
     @action(
         detail=True,
         methods=('post', 'delete'),
-        permission_classes=[permissions.IsAuthenticated]
+        permission_classes=(permissions.IsAuthenticated,)
     )
     def subscribe(self, request, *args, **kwargs):
-        author = get_object_or_404(User, id=self.kwargs.get('pk'))
+        author = get_object_or_404(User, id=self.kwargs.get('id'))
         user = self.request.user
         if request.method == 'POST':
             serializer = SubscribeSerializer(
@@ -105,7 +89,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=('post', 'delete'),
-        permission_classes=[permissions.IsAuthenticated]
+        permission_classes=(permissions.IsAuthenticated,)
     )
     def favorite(self, request, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
@@ -123,7 +107,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=('get',),
-        permission_classes=[permissions.IsAuthenticated]
+        permission_classes=(permissions.IsAuthenticated)
     )
     def download_shopping_cart(self, request):
         filename = 'list_ingredients.pdf'
@@ -146,7 +130,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=('post', 'delete'),
-        permission_classes=[permissions.IsAuthenticated]
+        permission_classes=(permissions.IsAuthenticated)
     )
     def shopping_cart(self, request, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
