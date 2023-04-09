@@ -11,17 +11,26 @@ Foodgram, «Продуктовый помощник». Онлайн сервис
 рецептов в избранное. Также можно скачать список продуктов на выбранные рецепты. 
 
 ### Установка:
-Создайте директорию infra/:
-~~~
-mkdir infra
-~~~
-В директории создать файл infra/.env и наполнить: 
-- DB_ENGINE=django.db.backends.postgresql
-- DB_NAME= # название дб
-- POSTGRES_USER= # имя пользователя
-- POSTGRES_PASSWORD= # пароль
-- DB_HOST=db
-- DB_PORT=5432
+
+В директории создать файл infra/.env и наполнить:
+```
+DB_ENGINE=django.db.backends.postgresql
+```
+```
+DB_NAME=postgres
+```
+```
+POSTGRES_USER=postgres
+```
+```
+POSTGRES_PASSWORD=postgres
+```
+```
+DB_HOST=db
+```
+```
+DB_PORT=5432
+```
 
 Из папки infra/ соберите образ:
 ```
@@ -41,7 +50,7 @@ docker-compose exec web python manage.py createsuperuser
 ```
 Резервная копия:
 ```
-docker-compose exec web python manage.py dumpdata > fixtures.json 
+docker-compose exec web python manage.py dumpdata > data.json 
 ```
 # Примеры запросов:
 http://localhost/redoc/ http://localhost/admin/
