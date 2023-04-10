@@ -16,7 +16,7 @@ services:
       - ./.env
 
   backend:
-    image: darkdace/foodgram:latest
+    image: darkdace/foodgram-proj:latest
     restart: always
     volumes:
      - static_value:/app/static/
