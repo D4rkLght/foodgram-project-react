@@ -1,6 +1,5 @@
 from http import HTTPStatus
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
@@ -11,7 +10,6 @@ User = get_user_model()
 class RegisterTestCase(APITestCase):
 
     def setUp(self):
-        self.assertEqual(settings.AUTH_USER_MODEL, 'users.User')
         self.data = {
             'email': 'user@ya.ru',
             'username': 'user',
@@ -59,7 +57,6 @@ class UsersTestCase(APITestCase):
 
     def setUp(self):
         self.client.credentials(HTTP_AUTHORIZATION='token ' + self.token.key)
-        self.assertEqual(settings.AUTH_USER_MODEL, 'users.User')
 
     def test_page_me(self):
         '''Test page me.'''

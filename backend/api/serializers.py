@@ -1,8 +1,8 @@
 from http import HTTPStatus
 
-from djoser.serializers import UserCreateSerializer, UserSerializer
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -37,9 +37,10 @@ class CustomUserSerializer(UserSerializer):
                   'last_name', 'is_subscribed')
 
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_authenticated:
-            return Subscribe.objects.filter(user=user, author=obj).exists()
+        current_user = self.context.get('request').user
+        if current_user.is_authenticated:
+            return Subscribe.objects.filter(user=current_user,
+                                            author=obj).exists()
         return False
 
 
@@ -66,10 +67,10 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return Recipe.objects.filter(author=obj.author).count()
 
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_authenticated:
+        current_user = self.context.get('request').user
+        if current_user.is_authenticated:
             return Subscribe.objects.filter(
-                user=user,
+                user=current_user,
                 author=obj.author
             ).exists()
         return False
@@ -133,14 +134,14 @@ class RecipeReadOnlySerializer(serializers.ModelSerializer):
         )
 
     def get_is_favorited(self, obj):
-        user = self.context.get('request').user
-        if user.is_authenticated:
+        current_user = self.context.get('request').user
+        if current_user.is_authenticated:
             return Favorite.objects.filter(recipe=obj).exists()
         return False
 
     def get_is_in_shopping_cart(self, obj):
-        user = self.context.get('request').user
-        if user.is_authenticated:
+        current_user = self.context.get('request').user
+        if current_user.is_authenticated:
             return ShoppingCart.objects.filter(recipe=obj).exists()
         return False
 

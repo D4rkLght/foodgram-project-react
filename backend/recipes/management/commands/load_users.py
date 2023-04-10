@@ -1,7 +1,10 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 users = [
     {
@@ -26,7 +29,6 @@ class Command(BaseCommand):
 
     def handle(self, **kwargs):
         for data in users:
-            print(data)
             User.objects.get_or_create(
                 email=data['email'],
                 username=data['username'],
@@ -34,3 +36,4 @@ class Command(BaseCommand):
                 last_name=data['last_name'],
                 password=data['password']
             )
+            logger.info(f'Запись сохранена: {data}')

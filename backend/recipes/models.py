@@ -35,7 +35,7 @@ class Ingredient(models.Model):
     name = models.CharField(
         max_length=100,
         verbose_name='Ingredient',
-        db_index=True,
+        unique=True,
     )
     measurement_unit = models.CharField(
         max_length=50,

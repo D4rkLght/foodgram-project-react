@@ -1,6 +1,10 @@
+import logging
+
 from django.core.management.base import BaseCommand
 
 from recipes.models import Tag
+
+logger = logging.getLogger(__name__)
 
 tags = [
     {
@@ -26,9 +30,9 @@ class Command(BaseCommand):
 
     def handle(self, **kwargs):
         for data in tags:
-            print(data)
             Tag.objects.get_or_create(
                 name=data['name'],
                 color=data['color'],
                 slug=data['slug']
             )
+            logger.info(f'Запись сохранена: {data}')

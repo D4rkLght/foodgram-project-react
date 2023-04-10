@@ -1,9 +1,12 @@
+import io
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from djoser.views import UserViewSet
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from djoser.views import UserViewSet
+from reportlab.pdfgen import canvas
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -16,7 +19,7 @@ from .permissions import (IsAdminOrReadOnly, IsOwnerAdminOrReadOnly,
 from .serializers import (CartSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeReadOnlySerializer,
                           RecipeWriteSerializer, SubscribeSerializer,
-                          TagSerializer, CustomUserSerializer)
+                          TagSerializer)
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Subscribe, Tag)
 
@@ -33,9 +36,7 @@ class UserUsualViewSet(UserViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def me(self, request):
-        serializer = CustomUserSerializer(request.user,
-                                          context={'request': request})
-        return Response(serializer.data)
+        return super().me(request)
 
     @action(
         detail=False,
@@ -58,15 +59,15 @@ class UserUsualViewSet(UserViewSet):
     )
     def subscribe(self, request, *args, **kwargs):
         author = get_object_or_404(User, id=self.kwargs.get('id'))
-        user = self.request.user
+        current_user = self.request.user
         if request.method == 'POST':
             serializer = SubscribeSerializer(
                 data=request.data,
                 context={'request': request, 'author': author})
             if serializer.is_valid(raise_exception=True):
-                serializer.save(author=author, user=user)
+                serializer.save(author=author, user=current_user)
                 return Response(serializer.data, status=HTTPStatus.CREATED)
-        if Subscribe.objects.filter(author=author, user=user).exists():
+        if Subscribe.objects.filter(author=author, user=current_user).exists():
             Subscribe.objects.get(author=author).delete()
             return Response(status=HTTPStatus.NO_CONTENT)
         return Response(status=HTTPStatus.NOT_FOUND)
@@ -94,55 +95,54 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
-        user = self.request.user
+        current_user = self.request.user
         if request.method == 'POST':
             serializer = FavoriteSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
-                serializer.save(user=user, recipe=recipe)
+                serializer.save(user=current_user, recipe=recipe)
                 return Response(serializer.data, status=HTTPStatus.CREATED)
-        if Favorite.objects.filter(user=user, recipe=recipe).exists():
-            Favorite.objects.get(user=user).delete()
+        else:
+            Favorite.objects.get(user=current_user).delete()
             return Response(status=HTTPStatus.NO_CONTENT)
         return Response(status=HTTPStatus.NOT_FOUND)
 
     @action(
         detail=False,
         methods=('get',),
-        permission_classes=(permissions.IsAuthenticated)
+        permission_classes=(permissions.IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
-        filename = 'list_ingredients.pdf'
         instance = request.user.cart.all()
         ingredients = IngredientAmount.objects.filter(
             recipe__in=instance.values('recipe')
         ).values('ingredient').annotate(amount=Sum('amount'))
-        list_ingredients = []
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer)
         for ingredient in ingredients:
             amount = ingredient['amount']
             ingredient = Ingredient.objects.get(id=ingredient['ingredient'])
-            measurement_unit = ingredient.measurement_unit
-            list_ingredients.append(
-                f'{ingredient} ({amount}) — {measurement_unit}'
-            )
-        response = Response(list_ingredients, content_type='text/plain')
-        response['Content-Disposition'] = f'attachment; filename={filename}'
-        return response
+            unit = ingredient.measurement_unit
+            p.drawString(100, 100, f'{ingredient} ({amount}) - {unit}')
+            p.save()
+            buffer.seek(0)
+        return FileResponse(buffer, as_attachment=True,
+                            filename='list_ingredients.pdf')
 
     @action(
         detail=True,
         methods=('post', 'delete'),
-        permission_classes=(permissions.IsAuthenticated)
+        permission_classes=(permissions.IsAuthenticated,)
     )
     def shopping_cart(self, request, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
-        user = self.request.user
+        current_user = self.request.user
         if request.method == 'POST':
             serializer = CartSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
-                serializer.save(author=user, recipe=recipe)
+                serializer.save(author=current_user, recipe=recipe)
                 return Response(serializer.data, status=HTTPStatus.CREATED)
-        if ShoppingCart.objects.filter(author=user, recipe=recipe).exists():
-            ShoppingCart.objects.get(author=user).delete()
+        else:
+            ShoppingCart.objects.get(author=current_user).delete()
             return Response(status=HTTPStatus.NO_CONTENT)
         return Response(status=HTTPStatus.NOT_FOUND)
 
