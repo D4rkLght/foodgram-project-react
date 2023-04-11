@@ -25,6 +25,7 @@ DEFAULT_APPS = [
 LOCAL_APPS = [
     'recipes',
     'api',
+    'users'
 ]
 
 EXTERNAL_APPS = [
@@ -156,3 +157,5 @@ LOGGING = {
         },
     },
 }
+
+AUTH_USER_MODEL = 'users.User'
