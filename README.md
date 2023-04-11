@@ -53,6 +53,8 @@ docker-compose exec backend python manage.py createsuperuser
 docker-compose exec backend python manage.py dumpdata > data.json 
 ```
 # Примеры запросов:
-http://localhost/redoc/ http://localhost/admin/
+http://84.201.166.93/ http://84.201.166.93/admin/
+login secretadmin
+password admin
 ## Над проектом работал:
 Разработчик [Ярослав Андреев ](https://github.com/D4rkLght).
