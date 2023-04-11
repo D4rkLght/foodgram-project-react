@@ -41,16 +41,17 @@ class UserUsualViewSet(UserViewSet):
     @action(
         detail=False,
         methods=('get',),
-        permission_classes=(permissions.IsAuthenticated,)
+        permission_classes=(permissions.IsAuthenticated,),
     )
     def subscriptions(self, request):
         subscriptions = Subscribe.objects.filter(user=self.request.user)
+        pages = self.paginate_queryset(subscriptions)
         serializer = SubscribeSerializer(
-            subscriptions,
+            pages,
             many=True,
             context={'request': request}
         )
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=True,
@@ -67,8 +68,8 @@ class UserUsualViewSet(UserViewSet):
             if serializer.is_valid(raise_exception=True):
                 serializer.save(author=author, user=current_user)
                 return Response(serializer.data, status=HTTPStatus.CREATED)
-        if Subscribe.objects.filter(author=author, user=current_user).exists():
-            Subscribe.objects.get(author=author).delete()
+        else:
+            Subscribe.objects.get(author=author, user=current_user).delete()
             return Response(status=HTTPStatus.NO_CONTENT)
         return Response(status=HTTPStatus.NOT_FOUND)
 
@@ -102,7 +103,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 serializer.save(user=current_user, recipe=recipe)
                 return Response(serializer.data, status=HTTPStatus.CREATED)
         else:
-            Favorite.objects.get(user=current_user).delete()
+            Favorite.objects.get(user=current_user, recipe=recipe).delete()
             return Response(status=HTTPStatus.NO_CONTENT)
         return Response(status=HTTPStatus.NOT_FOUND)
 
@@ -142,7 +143,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 serializer.save(author=current_user, recipe=recipe)
                 return Response(serializer.data, status=HTTPStatus.CREATED)
         else:
-            ShoppingCart.objects.get(author=current_user).delete()
+            ShoppingCart.objects.filter(author=current_user,
+                                        recipe=recipe).delete()
             return Response(status=HTTPStatus.NO_CONTENT)
         return Response(status=HTTPStatus.NOT_FOUND)
 
@@ -151,11 +153,13 @@ class TagViewSet(ListViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = None
 
 
 class IngredientViewSet(ListViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = None
     filter_backends = (IngredientFilter,)
     search_fields = ('^name',)

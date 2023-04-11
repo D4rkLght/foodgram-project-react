@@ -38,19 +38,19 @@ docker-compose up -d
 ```
 Миграции:
 ```
-docker-compose exec web python manage.py migrate
+docker-compose exec backend python manage.py migrate
 ```
 Сбор статики:
 ```
-docker-compose exec web python manage.py collectstatic --no-input
+docker-compose exec backend python manage.py collectstatic --no-input
 ```
 Создание суперюзера:
 ```
-docker-compose exec web python manage.py createsuperuser
+docker-compose exec backend python manage.py createsuperuser
 ```
 Резервная копия:
 ```
-docker-compose exec web python manage.py dumpdata > data.json 
+docker-compose exec backend python manage.py dumpdata > data.json 
 ```
 # Примеры запросов:
 http://localhost/redoc/ http://localhost/admin/
