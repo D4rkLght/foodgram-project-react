@@ -1,12 +1,9 @@
-import io
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
-from reportlab.pdfgen import canvas
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -113,21 +110,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
+        filename = 'list_ingredients.txt'
         instance = request.user.cart.all()
         ingredients = IngredientAmount.objects.filter(
             recipe__in=instance.values('recipe')
         ).values('ingredient').annotate(amount=Sum('amount'))
-        buffer = io.BytesIO()
-        p = canvas.Canvas(buffer)
+        list_ingredients = []
         for ingredient in ingredients:
             amount = ingredient['amount']
             ingredient = Ingredient.objects.get(id=ingredient['ingredient'])
-            unit = ingredient.measurement_unit
-            p.drawString(100, 100, f'{ingredient} ({amount}) - {unit}')
-            p.save()
-            buffer.seek(0)
-        return FileResponse(buffer, as_attachment=True,
-                            filename='list_ingredients.pdf')
+            measurement_unit = ingredient.measurement_unit
+            list_ingredients.append(
+                f'{ingredient} ({amount}) - {measurement_unit}'
+            )
+        response = Response(list_ingredients, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename={filename}'
+        return response
 
     @action(
         detail=True,
