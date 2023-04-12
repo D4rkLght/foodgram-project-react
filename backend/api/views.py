@@ -3,6 +3,7 @@ from http import HTTPStatus
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
@@ -76,6 +77,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = Paginator
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
                           IsOwnerAdminOrReadOnly)
+    filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
     def get_serializer_class(self):
