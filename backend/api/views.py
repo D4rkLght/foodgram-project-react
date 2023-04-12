@@ -12,8 +12,7 @@ from rest_framework.response import Response
 from .filters import IngredientFilter, RecipeFilter
 from .mixins import ListViewSet
 from .paginations import Paginator
-from .permissions import (IsAdminOrReadOnly, IsOwnerAdminOrReadOnly,
-                          IsUserAdminOrReadOnly)
+from .permissions import (IsAdminOrReadOnly, IsUserAdminOrReadOnly)
 from .serializers import (CartSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeReadOnlySerializer,
                           RecipeWriteSerializer, SubscribeSerializer,
@@ -31,14 +30,6 @@ class UserUsualViewSet(UserViewSet):
     @action(
         detail=False,
         methods=('get',),
-        permission_classes=(permissions.IsAuthenticated,)
-    )
-    def me(self, request):
-        return super().me(request)
-
-    @action(
-        detail=False,
-        methods=('get',),
         permission_classes=(permissions.IsAuthenticated,),
     )
     def subscriptions(self, request):
@@ -49,7 +40,6 @@ class UserUsualViewSet(UserViewSet):
             many=True,
             context={'request': request}
         )
-        print(request)
         return self.get_paginated_response(serializer.data)
 
     @action(
@@ -64,10 +54,10 @@ class UserUsualViewSet(UserViewSet):
             serializer = SubscribeSerializer(
                 data=request.data,
                 context={'request': request, 'author': author})
-            if serializer.is_valid(raise_exception=True):
-                serializer.save(author=author, user=current_user)
-                return Response(serializer.data, status=HTTPStatus.CREATED)
-        else:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(author=author, user=current_user)
+            return Response(serializer.data, status=HTTPStatus.CREATED)
+        elif request.method == 'DELETE':
             Subscribe.objects.get(author=author, user=current_user).delete()
             return Response(status=HTTPStatus.NO_CONTENT)
         return Response(status=HTTPStatus.NOT_FOUND)
@@ -77,8 +67,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     pagination_class = Paginator
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
-                          IsOwnerAdminOrReadOnly)
-    filter_backends = [DjangoFilterBackend]
+                          IsUserAdminOrReadOnly)
+    filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
 
     def get_serializer_class(self):
@@ -99,10 +89,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         current_user = self.request.user
         if request.method == 'POST':
             serializer = FavoriteSerializer(data=request.data)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save(user=current_user, recipe=recipe)
-                return Response(serializer.data, status=HTTPStatus.CREATED)
-        else:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=current_user, recipe=recipe)
+            return Response(serializer.data, status=HTTPStatus.CREATED)
+        elif request.method == 'DELETE':
             Favorite.objects.get(user=current_user, recipe=recipe).delete()
             return Response(status=HTTPStatus.NO_CONTENT)
         return Response(status=HTTPStatus.NOT_FOUND)
@@ -140,10 +130,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         current_user = self.request.user
         if request.method == 'POST':
             serializer = CartSerializer(data=request.data)
-            if serializer.is_valid(raise_exception=True):
-                serializer.save(author=current_user, recipe=recipe)
-                return Response(serializer.data, status=HTTPStatus.CREATED)
-        else:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(author=current_user, recipe=recipe)
+            return Response(serializer.data, status=HTTPStatus.CREATED)
+        elif request.method == 'DELETE':
             ShoppingCart.objects.filter(author=current_user,
                                         recipe=recipe).delete()
             return Response(status=HTTPStatus.NO_CONTENT)
