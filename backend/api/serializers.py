@@ -109,6 +109,16 @@ class RecipeReadOnlySerializer(serializers.ModelSerializer):
         return False
 
 
+class RecipeSubSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'author_id', 'image', 'name',
+                  'text', 'cooking_time', 'pub_date')
+        read_only_fields = ('id', 'author_id', 'image', 'name',
+                            'text', 'cooking_time', 'pub_date')
+
+
 class SubscribeSerializer(serializers.ModelSerializer):
     email = serializers.ReadOnlyField(source='author.email')
     id = serializers.ReadOnlyField(source='author.id')
@@ -125,8 +135,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
                   'last_name', 'is_subscribed', 'recipes', 'recipes_count')
 
     def get_recipes(self, obj):
-        recipe = Recipe.objects.filter(author=obj.author)
-        return recipe.values()
+        recipes = Recipe.objects.filter(author=obj.author)
+        return RecipeSubSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.author).count()

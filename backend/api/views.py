@@ -49,6 +49,7 @@ class UserUsualViewSet(UserViewSet):
             many=True,
             context={'request': request}
         )
+        print(request)
         return self.get_paginated_response(serializer.data)
 
     @action(
