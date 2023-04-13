@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
@@ -12,7 +13,7 @@ from rest_framework.response import Response
 from .filters import IngredientFilter, RecipeFilter
 from .mixins import ListViewSet
 from .paginations import Paginator
-from .permissions import (IsAdminOrReadOnly, IsUserAdminOrReadOnly)
+from .permissions import IsAdminUserOrReadOnly, IsOwnerAdminOrReadOnly
 from .serializers import (CartSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeReadOnlySerializer,
                           RecipeWriteSerializer, SubscribeSerializer,
@@ -24,7 +25,7 @@ User = get_user_model()
 
 
 class UserUsualViewSet(UserViewSet):
-    permission_classes = (IsUserAdminOrReadOnly,)
+    permission_classes = (IsAdminUserOrReadOnly,)
     pagination_class = Paginator
 
     @action(
@@ -67,7 +68,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     pagination_class = Paginator
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,
-                          IsUserAdminOrReadOnly)
+                          IsOwnerAdminOrReadOnly)
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
 
@@ -108,15 +109,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ingredients = IngredientAmount.objects.filter(
             recipe__in=instance.values('recipe')
         ).values('ingredient').annotate(amount=Sum('amount'))
-        list_ingredients = []
+        list_ingredients = 'Список покупок:\n'
         for ingredient in ingredients:
             amount = ingredient['amount']
             ingredient = Ingredient.objects.get(id=ingredient['ingredient'])
             measurement_unit = ingredient.measurement_unit
-            list_ingredients.append(
-                f'{ingredient} ({amount}) - {measurement_unit}'
+            list_ingredients += (
+                f'{ingredient} ({amount}) - {measurement_unit}\n'
             )
-        response = Response(list_ingredients, content_type='text/plain')
+        response = HttpResponse(list_ingredients, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
         return response
 
@@ -143,14 +144,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class TagViewSet(ListViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminUserOrReadOnly,)
     pagination_class = None
 
 
 class IngredientViewSet(ListViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminUserOrReadOnly,)
     pagination_class = None
     filter_backends = (IngredientFilter,)
     search_fields = ('^name',)

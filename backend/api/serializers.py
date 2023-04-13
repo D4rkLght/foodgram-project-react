@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
@@ -99,13 +100,19 @@ class RecipeReadOnlySerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         current_user = self.context.get('request').user
         if current_user.is_authenticated:
-            return Favorite.objects.filter(recipe=obj).exists()
+            return Favorite.objects.filter(
+                recipe=obj,
+                user=current_user
+            ).exists()
         return False
 
     def get_is_in_shopping_cart(self, obj):
         current_user = self.context.get('request').user
         if current_user.is_authenticated:
-            return ShoppingCart.objects.filter(recipe=obj).exists()
+            return ShoppingCart.objects.filter(
+                recipe=obj,
+                author=current_user
+            ).exists()
         return False
 
 
@@ -214,6 +221,27 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         recipe = super().create(validated_data)
         self.add_ingredients(ingredients, tags, recipe)
         return recipe
+
+    def validate_ingredients(self, value):
+        if not value:
+            raise ValidationError('You need to choose the ingredients.')
+        ingredients = {}
+        for item in value:
+            if item['id'] in ingredients:
+                ingredients[item['id']] += int(item['amount'])
+            if int(item['amount']) <= 0:
+                raise ValidationError(
+                    'Amount ingredients must be greater then zero.'
+                )
+            if item['id'] not in ingredients:
+                ingredients[item['id']] = int(item['amount'])
+        return [OrderedDict({'id': id, 'amount': amount})
+                for id, amount in ingredients.items()]
+
+    def validate_tags(self, value):
+        if not value:
+            raise ValidationError('You need to choose the tag.')
+        return value
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
