@@ -53,7 +53,7 @@ docker-compose exec backend python manage.py createsuperuser
 docker-compose exec backend python manage.py dumpdata > data.json 
 ```
 # Примеры запросов:
-http://84.201.166.93/ http://84.201.166.93/admin/
+http://delicious.hopto.org/ http://delicious.hopto.org/admin/
 login secretadmin
 password admin
 ## Над проектом работал:

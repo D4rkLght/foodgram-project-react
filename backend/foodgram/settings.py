@@ -11,7 +11,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', default='django-insecure-44@s4f##@9=hadk)^v
 
 DEBUG = os.getenv('DEBUG', default='True')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['84.201.166.93', 'delicious.hopto.org', '*']
 
 DEFAULT_APPS = [
     'django.contrib.admin',
