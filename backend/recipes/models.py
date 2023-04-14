@@ -92,11 +92,6 @@ class Recipe(models.Model):
         verbose_name = 'Recipe'
         verbose_name_plural = 'Recipes'
         ordering = ('-pub_date', )
-        constraints = [
-            models.UniqueConstraint(
-                fields=['name', 'author'],
-                name='unique_recipe')
-        ]
 
     def __str__(self) -> str:
         return self.name
