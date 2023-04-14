@@ -37,12 +37,27 @@ services:
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_value:/var/html/static/
       - media_value:/var/html/media/
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/lib/letsencrypt
     depends_on:
       - backend
       - frontend
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/var/www/html
+    depends_on:
+      - nginx
+    command: certonly -v --webroot -w /var/www/ -d delicious.hopto.org --email 1frost34eone@gmail.com --agree-tos --no-eff-email
 
 volumes:
   data:
   static_value:
   media_value:
   redoc:
+  certbot-conf:
+  certbot-www:
