@@ -61,3 +61,6 @@ volumes:
   redoc:
   certbot-conf:
   certbot-www:
+  certbot-etc:
+  certbot-var:
+  web-root:
